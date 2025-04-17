@@ -1,4 +1,64 @@
+import pandas as pd
 import difflib
+from datetime import datetime
+import os
+import json
+
+class MELAgent:
+    def __init__(self):
+        self.mel_db = pd.read_csv(os.path.join(os.path.dirname(__file__), 'mel_library.csv'))
+
+    def evaluate(self, context):
+        mel_item = getattr(context, "reported_mel", "").strip()
+        if not mel_item:
+            return self._log_and_return(context, mel_item, {
+                "action": "No MEL reported",
+                "reason": "No MEL entered in context",
+                "defer_days": 0
+            })
+
+        # Try exact match first
+        match = self.mel_db[(self.mel_db["mel_item"].str.lower() == mel_item.lower()) &
+                            (self.mel_db["aircraft_type"] == context.aircraft_type)]
+        if not match.empty:
+            row = match.iloc[0]
+            return self._log_and_return(context, mel_item, {
+                "action": row["action"],
+                "reason": row["reason"],
+                "defer_days": int(row["defer_days"])
+            })
+
+        # Fuzzy match
+        mel_entries = self.mel_db["mel_item"].tolist()
+        close_matches = difflib.get_close_matches(mel_item, mel_entries, n=1, cutoff=0.6)
+
+        if close_matches:
+            best = close_matches[0]
+            row = self.mel_db[self.mel_db["mel_item"] == best].iloc[0]
+            return self._log_and_return(context, mel_item, {
+                "action": row["action"],
+                "reason": f"Fuzzy match to: '{best}' — {row['reason']}",
+                "defer_days": int(row["defer_days"])
+            })
+
+        return self._log_and_return(context, mel_item, {
+            "action": "Unknown",
+            "reason": "No MEL entry found",
+            "defer_days": 0
+        })
+
+    def _log_and_return(self, context, mel_item, result):
+        log = {
+            "timestamp": datetime.now().isoformat(),
+            "flight_id": context.flight_id,
+            "aircraft_type": context.aircraft_type,
+            "reported_mel": mel_item,
+            "result": result
+        }
+        os.makedirs("logs", exist_ok=True)
+        with open("logs/melagent_logs.jsonl", "a") as f:
+            f.write(json.dumps(log) + "\n")
+        return result
 
 from core.agent_base import AgentBase
 from datetime import datetime

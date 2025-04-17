@@ -1,0 +1,11 @@
+mel_item,aircraft_type,action,reason,defer_days
+APU inop,B747,Fly with restriction,Allowed with ground power at departure,10
+Fuel quantity indication inop,B747,Ground hold,Requires maintenance prior to flight,0
+Cockpit voice recorder inop,B747,Fly with restriction,May be deferred under Part 91 with approval,3
+Radar inop,B747,Fly with restriction,Allowed in VMC day conditions,5
+Engine anti-ice inop,B747,Ground hold,Cannot dispatch into known icing,0
+Engine nacelle light inop,B747,Fly with restriction,Night ops not permitted,5
+Brake temp sensor inop,B747,Fly with restriction,Allowed with maintenance sign-off,2
+Left fuel pump inop,B747,Ground hold,Essential for start-up sequence,0
+Right nav light inop,B747,Fly with restriction,Allowed in daylight ops,7
+Weather radar inop,B747,Fly with restriction,Permitted with alternate route approval,3
